@@ -6,6 +6,8 @@ import random
 number = 0
 
 vtipy = ["Víte jak začíná příběh ekologů? Bio nebio...",
+
+
          "Víte, proč krab nemá peníze? Protože je na dně.",
          "Na obale salámu je napsáno: Na 100 g výrobku bylo použito 125 g masa.",
          "Pilát potká Ježíše a řekne mu: „Já jsem Pilát.“A Ježíš na to odpoví:„Pilát? Jako ten z Kalibiku?“",
@@ -110,6 +112,7 @@ vtipy = ["Víte jak začíná příběh ekologů? Bio nebio...",
          'Pepíček vejde do ložnice a vidí jak si to rodiče rozdávaj v posteli. Otec se zasměje a hodí po něm polštář.Za chvíli otec zaslechne divné zvuky z Pepíčkova pokoje, nakoukne a vidí, jak si to tam Pepíček rozdává s babičkou. Ten koukne na zkoprnělýho otce ve dveřích a povídá: "Není to zas taková prdel, když ti někdo píchá matku, viď?"',
 ]
 
+
 # Send messages
 async def send_message(message, user_message, is_private):
     try:
@@ -167,6 +170,10 @@ def run_discord_bot(token):
         embed = discord.Embed(title=f"Pong", color=65535)
         embed.add_field(name=f"Time: {round(client.latency*1000)}ms", value='\a')
         await interaction.response.send_message(embed=embed)
+
+    @client.tree.command(name="vtip", description="Řeknu ti vtip")
+    async def vtip(interaction: discord.Interaction):
+        await interaction.response.send_message(str(random.choice(vtipy)))
 
     @client.event
     async def on_message(message):
