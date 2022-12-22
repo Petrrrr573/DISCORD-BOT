@@ -1,13 +1,14 @@
 import discord
 import responses
+from main import reddit
 from discord.ext import commands
 from discord import app_commands
 import random
+import praw
+
 number = 0
 
 vtipy = ["Víte jak začíná příběh ekologů? Bio nebio...",
-
-
          "Víte, proč krab nemá peníze? Protože je na dně.",
          "Na obale salámu je napsáno: Na 100 g výrobku bylo použito 125 g masa.",
          "Pilát potká Ježíše a řekne mu: „Já jsem Pilát.“A Ježíš na to odpoví:„Pilát? Jako ten z Kalibiku?“",
@@ -147,7 +148,7 @@ def run_discord_bot(token):
     @client.tree.command(name="řekni", description="Co bych měl říct?")
     @app_commands.describe(něco="Co bych měl říct?")
     async def řekni(interaction: discord.Interaction, něco: str):
-        await interaction.response.send_message(f'`{interaction.user.display_name}` řekl: {něco}')
+        await interaction.response.send_message(něco)
 
     @client.tree.command(name="kostky", description="Náhodné číslo od 1 do 6")
     async def kostky(interaction: discord.Interaction):
@@ -168,12 +169,43 @@ def run_discord_bot(token):
     @client.tree.command(name="ping", description="Ping Pong")
     async def ping(interaction: discord.Interaction):
         embed = discord.Embed(title=f"Pong", color=65535)
-        embed.add_field(name=f"Time: {round(client.latency*1000)}ms", value='\a')
+        embed.add_field(name="Čas:", value=f" {round(client.latency*1000)}ms")
         await interaction.response.send_message(embed=embed)
 
     @client.tree.command(name="vtip", description="Řeknu ti vtip")
     async def vtip(interaction: discord.Interaction):
         await interaction.response.send_message(str(random.choice(vtipy)))
+
+    @client.tree.command(name="pomoc", description="Pomůžu ti")
+    async def pomoc(interaction: discord.Interaction):
+        embed = discord.Embed(title=f"Příkazy", color=65535)
+        embed.add_field(name="/ahoj", value="Pozdravím tě")
+        embed.add_field(name="/řekni", value="Řeknu vše co budeš chtít")
+        embed.add_field(name="/koskty", value="Řeknu ti náhodné číslo od 1 od 6")
+        embed.add_field(name="/ping", value="Zjistíš za jak dlouho mi trvá ti odpovědět")
+        embed.add_field(name="/vtip", value="Řeknu ti jeden ze 100 vtipů")
+        embed.add_field(name="/reddit", value="Vezmu náhody post z redditu, který vybereš")
+        embed.add_field(name="/pomoc", value="Pomůžu ti")
+        
+        await interaction.response.send_message(embed=embed)
+
+    @client.tree.command(name="reddit", description="Random post z redditu")
+    @app_commands.describe(název="Z jakého subredditu mám vzít post?")
+    async def meme(interaction: discord.Interaction, název: str):
+        subreddit = reddit.subreddit(název)
+
+        hot_posts = subreddit.hot(limit=50)
+
+        post = random.choice(list(hot_posts))
+
+        title = post.title
+        url = post.url
+
+        embed = discord.Embed(title=title, color=65535)
+        
+        embed.set_image(url=url)
+
+        await interaction.response.send_message(embed=embed)
 
     @client.event
     async def on_message(message):
