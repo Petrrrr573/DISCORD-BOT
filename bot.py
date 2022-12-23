@@ -154,17 +154,17 @@ def run_discord_bot(token):
     async def kostky(interaction: discord.Interaction):
         rand = str(random.randint(1, 6))
         if rand == "1":
-            await interaction.response.send_message('_1️⃣_')
+            await interaction.response.send_message('||_1️⃣_||')
         if rand == "2":
-            await interaction.response.send_message('_2️⃣_')
+            await interaction.response.send_message('||_2️⃣_||')
         if rand == "3":
-            await interaction.response.send_message('_3️⃣_')
+            await interaction.response.send_message('||_3️⃣_||')
         if rand == "4":
-            await interaction.response.send_message('_4️⃣_')
+            await interaction.response.send_message('||_4️⃣_||')
         if rand == "5":
-            await interaction.response.send_message('_5️⃣_')
+            await interaction.response.send_message('||_5️⃣_||')
         if rand == "6":
-            await interaction.response.send_message('_6️⃣_')
+            await interaction.response.send_message('||_6️⃣_||')
 
     @client.tree.command(name="ping", description="Ping Pong")
     async def ping(interaction: discord.Interaction):
