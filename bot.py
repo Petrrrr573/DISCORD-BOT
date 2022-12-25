@@ -230,7 +230,7 @@ def run_discord_bot(token):
                 else:
                     await message.add_reaction("❌")
                     number = 0
-                    await message.channel.send(f"`{username}` to pojebal, protože neumí počítat")
+                    await message.channel.send(f"`{username}` to pokazil, počítání se resetovalo. Napište `1` abyste začali")
             else:
                 if username == "Petrrrrr#1030":
                     await message.add_reaction("🇳")
