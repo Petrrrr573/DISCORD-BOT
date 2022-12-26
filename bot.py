@@ -5,6 +5,7 @@ from discord.ext import commands
 from discord import app_commands
 import random
 import praw
+import datetime
 
 number = 0
 
@@ -170,6 +171,7 @@ def run_discord_bot(token):
     async def ping(interaction: discord.Interaction):
         embed = discord.Embed(title=f"Pong", color=65535)
         embed.add_field(name="Čas:", value=f" {round(client.latency*1000)}ms")
+        embed.timestamp = datetime.datetime.utcnow()
         await interaction.response.send_message(embed=embed)
 
     @client.tree.command(name="vtip", description="Řeknu ti vtip")
@@ -186,6 +188,8 @@ def run_discord_bot(token):
         embed.add_field(name="/vtip", value="Řeknu ti jeden ze 100 vtipů")
         embed.add_field(name="/reddit", value="Vezmu náhody post z redditu, který vybereš")
         embed.add_field(name="/pomoc", value="Pomůžu ti")
+
+        embed.timestamp = datetime.datetime.utcnow()
         
         await interaction.response.send_message(embed=embed)
 
@@ -202,10 +206,15 @@ def run_discord_bot(token):
         url = post.url
 
         embed = discord.Embed(title=title, color=65535)
-        
         embed.set_image(url=url)
+        embed.timestamp = datetime.datetime.utcnow()
+
+
+        embed_link = discord.Embed(title="Odkaz:", color=65535, description=f"<https://www.reddit.com{str(post.permalink)}>")
+        embed_link.timestamp = datetime.datetime.utcnow()
 
         await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed_link)
 
     @client.event
     async def on_message(message):
