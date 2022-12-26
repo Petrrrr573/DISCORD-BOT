@@ -142,6 +142,12 @@ def run_discord_bot(token):
         except Exception as e:
             print(e)
 
+        for server in client.guilds:
+            channel = discord.utils.get(server.channels, name="123")
+            if channel is not None:
+                # Send a message to the channel
+                await channel.send("Bot byl znovu zapnut, počítání se restartvovalo. Napište `1` abyste začali")
+
     @client.tree.command(name="ahoj", description="Pozdrav mě")
     async def ahoj(interaction: discord.Interaction):
         await interaction.response.send_message(f'Ahoj `{interaction.user.display_name}`')
