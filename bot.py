@@ -5,6 +5,10 @@ from discord.ext import commands
 from discord import app_commands
 import random
 import praw
+import openai
+
+
+openai.api_key = "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"
 
 number = 0
 
@@ -206,6 +210,21 @@ def run_discord_bot(token):
         embed.set_image(url=url)
 
         await interaction.response.send_message(embed=embed)
+
+    @client.tree.command(name="chatgpt")
+    @app_commands.describe(question="Co chceš vědět?")
+    async def chatgpt(interaction: discord.Interaction, question: str):
+            # Use the GPT-3 API to generate a response to the question
+            response = openai.Completion.create(
+                engine="text-davinci-002",
+                prompt=f"{question}\n",
+                max_tokens=1024,
+                n=1,
+                stop=None,
+                temperature=0.7,
+            )
+
+            await interaction.response.send_message(response["choices"][0]["text"])
 
     @client.event
     async def on_message(message):
