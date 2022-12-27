@@ -5,10 +5,14 @@ from discord.ext import commands
 from discord import app_commands
 import random
 import praw
+<<<<<<< HEAD
 import openai
 
 
 openai.api_key = "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"
+=======
+import datetime
+>>>>>>> 235e564fdf61a2a6d1cca6f1ef91082fe67624cd
 
 number = 0
 
@@ -145,6 +149,12 @@ def run_discord_bot(token):
         except Exception as e:
             print(e)
 
+        for server in client.guilds:
+            channel = discord.utils.get(server.channels, name="123")
+            if channel is not None:
+                # Send a message to the channel
+                await channel.send("Bot byl znovu zapnut, počítání se restartvovalo. Napište `1` abyste začali")
+
     @client.tree.command(name="ahoj", description="Pozdrav mě")
     async def ahoj(interaction: discord.Interaction):
         await interaction.response.send_message(f'Ahoj `{interaction.user.display_name}`')
@@ -174,6 +184,7 @@ def run_discord_bot(token):
     async def ping(interaction: discord.Interaction):
         embed = discord.Embed(title=f"Pong", color=65535)
         embed.add_field(name="Čas:", value=f" {round(client.latency*1000)}ms")
+        embed.timestamp = datetime.datetime.utcnow()
         await interaction.response.send_message(embed=embed)
 
     @client.tree.command(name="vtip", description="Řeknu ti vtip")
@@ -190,6 +201,8 @@ def run_discord_bot(token):
         embed.add_field(name="/vtip", value="Řeknu ti jeden ze 100 vtipů")
         embed.add_field(name="/reddit", value="Vezmu náhody post z redditu, který vybereš")
         embed.add_field(name="/pomoc", value="Pomůžu ti")
+
+        embed.timestamp = datetime.datetime.utcnow()
         
         await interaction.response.send_message(embed=embed)
 
@@ -206,10 +219,15 @@ def run_discord_bot(token):
         url = post.url
 
         embed = discord.Embed(title=title, color=65535)
-        
         embed.set_image(url=url)
+        embed.timestamp = datetime.datetime.utcnow()
+
+
+        embed_link = discord.Embed(title="Odkaz:", color=65535, description=f"<https://www.reddit.com{str(post.permalink)}>")
+        embed_link.timestamp = datetime.datetime.utcnow()
 
         await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed_link)
 
     @client.tree.command(name="chatgpt")
     @app_commands.describe(question="Co chceš vědět?")
@@ -251,9 +269,8 @@ def run_discord_bot(token):
                     number = 0
                     await message.channel.send(f"`{username}` to pokazil, počítání se resetovalo. Napište `1` abyste začali")
             else:
-                if username == "Petrrrrr#1030":
-                    await message.add_reaction("🇳")
-                    await message.add_reaction("🇪")
+                await message.add_reaction("🇳")
+                await message.add_reaction("🇪")
                 await message.channel.purge(limit=1)
 
 
