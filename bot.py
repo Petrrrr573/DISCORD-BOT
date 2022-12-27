@@ -200,6 +200,7 @@ def run_discord_bot(token):
         embed.add_field(name="/ping", value="Zjistíš za jak dlouho mi trvá ti odpovědět")
         embed.add_field(name="/vtip", value="Řeknu ti jeden ze 100 vtipů")
         embed.add_field(name="/reddit", value="Vezmu náhody post z redditu, který vybereš")
+        embed.add_field(name="/chatgpt", value="Pomocí Open AI API se ti pokusím odpovědět na co se mě ptáš")
         embed.add_field(name="/pomoc", value="Pomůžu ti")
 
         embed.timestamp = datetime.datetime.now()
@@ -240,19 +241,22 @@ def run_discord_bot(token):
         await interaction.response.send_message(embed=embed)
 
     @client.tree.command(name="chatgpt")
-    @app_commands.describe(question="Co chceš vědět?")
-    async def chatgpt(interaction: discord.Interaction, question: str):
+    @app_commands.describe(otázka="Co chceš vědět?")
+    async def chatgpt(interaction: discord.Interaction, otázka: str):
             # Use the GPT-3 API to generate a response to the question
             response = openai.Completion.create(
                 engine="text-davinci-002",
-                prompt=f"{question}\n",
+                prompt=f"{otázka}\n",
                 max_tokens=1024,
                 n=1,
                 stop=None,
                 temperature=0.7,
             )
+            embed = discord.Embed(title=otázka,color=65535, description=response["choices"][0]["text"])
 
-            await interaction.response.send_message(response["choices"][0]["text"])
+            embed.timestamp = datetime.datetime.now()
+
+            await interaction.response.send_message(embed=embed)
 
     @client.event
     async def on_message(message):
