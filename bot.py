@@ -5,14 +5,11 @@ from discord.ext import commands
 from discord import app_commands
 import random
 import praw
-<<<<<<< HEAD
 import openai
+import datetime, time
 
 
 openai.api_key = "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"
-=======
-import datetime
->>>>>>> 235e564fdf61a2a6d1cca6f1ef91082fe67624cd
 
 number = 0
 
@@ -134,6 +131,7 @@ async def send_message(message, user_message, is_private):
 def run_discord_bot(token):
     number = 0
     TOKEN = token
+    start_time = time.time()
     # intents = discord.Intents.default()
     # intents.message_content = True
     # intents.members = True
@@ -148,6 +146,8 @@ def run_discord_bot(token):
             print(f"Synced {len(synced)} command(s)")
         except Exception as e:
             print(e)
+
+        await client.change_presence(status=discord.Status.online,activity=discord.Game('/pomoc'))
 
         for server in client.guilds:
             channel = discord.utils.get(server.channels, name="123")
@@ -228,6 +228,16 @@ def run_discord_bot(token):
 
         await interaction.response.send_message(embed=embed)
         await interaction.followup.send(embed=embed_link)
+    
+    @client.tree.command(name="uptime", description="Jak dlouho jsem už online")
+    async def uptime(interaction: discord.Interaction):
+        current_time = time.time()
+        difference = int(round(current_time - start_time))
+        text = str(datetime.timedelta(seconds=difference))
+        embed = discord.Embed(color=65535)
+        embed.add_field(name="Doba", value=text)
+        embed.timestamp = datetime.datetime.now()
+        await interaction.response.send_message(embed=embed)
 
     @client.tree.command(name="chatgpt")
     @app_commands.describe(question="Co chceš vědět?")
