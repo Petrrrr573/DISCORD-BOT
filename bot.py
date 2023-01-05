@@ -1,15 +1,13 @@
 import discord
 import responses
-from main import reddit
+import main
 from discord.ext import commands
 from discord import app_commands
 import random
 import praw
-import openai
 import datetime, time
-
-
-openai.api_key = "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"
+from main import reddit, giphy_key
+import requests
 
 number = 0
 
@@ -200,7 +198,8 @@ def run_discord_bot(token):
         embed.add_field(name="/ping", value="Zjistíš za jak dlouho mi trvá ti odpovědět")
         embed.add_field(name="/vtip", value="Řeknu ti jeden ze 100 vtipů")
         embed.add_field(name="/reddit", value="Vezmu náhody post z redditu, který vybereš")
-        embed.add_field(name="/chatgpt", value="Pomocí Open AI API se ti pokusím odpovědět na co se mě ptáš")
+        embed.add_field(name="/uptime", value="Zjistíš jak dlouho už jsem online")
+        embed.add_field(name="/gif", value="Pomocí Giphy API pošlu gif podle názvu v Angličtině")
         embed.add_field(name="/pomoc", value="Pomůžu ti")
 
         embed.timestamp = datetime.datetime.now()
@@ -229,7 +228,8 @@ def run_discord_bot(token):
 
         await interaction.response.send_message(embed=embed)
         await interaction.followup.send(embed=embed_link)
-    
+                
+
     @client.tree.command(name="uptime", description="Jak dlouho jsem už online")
     async def uptime(interaction: discord.Interaction):
         current_time = time.time()
@@ -239,24 +239,24 @@ def run_discord_bot(token):
         embed.add_field(name="Doba", value=text)
         embed.timestamp = datetime.datetime.now()
         await interaction.response.send_message(embed=embed)
+    
+    @client.tree.command(name="gif", description="Gif podle tvého zadání (v Angličtině")
+    @app_commands.describe(název="Název? (v Angličtině)")
+    async def gif(interaction: discord.Interaction, název: str):
 
-    @client.tree.command(name="chatgpt")
-    @app_commands.describe(otázka="Co chceš vědět?")
-    async def chatgpt(interaction: discord.Interaction, otázka: str):
-            # Use the GPT-3 API to generate a response to the question
-            response = openai.Completion.create(
-                engine="text-davinci-002",
-                prompt=f"{otázka}\n",
-                max_tokens=1024,
-                n=1,
-                stop=None,
-                temperature=0.7,
-            )
-            embed = discord.Embed(title=otázka,color=65535, description=response["choices"][0]["text"])
+        # Make a request to the Giphy API to search for GIFs
+        api_key = giphy_key
+        r = requests.get(f'http://api.giphy.com/v1/gifs/search?api_key={api_key}&q={název}')
 
-            embed.timestamp = datetime.datetime.now()
+        # Get the first GIF from the search results
+        gif_url = r.json()['data'][random.randint(1, 25)]['images']['original']['url']
 
-            await interaction.response.send_message(embed=embed)
+        embed = discord.Embed(title=název, color=65535)
+        embed.set_image(url=gif_url)
+        embed.timestamp = datetime.datetime.now()
+
+        # Send the GIF in the channel
+        await interaction.response.send_message(embed=embed)
 
     @client.event
     async def on_message(message):

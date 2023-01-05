@@ -9,3 +9,7 @@ reddit = praw.Reddit(client_id = "",
                     username = "",
                     password = "",
                     user_agent = "")
+
+giphy_key = ""
+
+
