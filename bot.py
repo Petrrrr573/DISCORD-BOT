@@ -8,7 +8,6 @@ import praw
 import datetime, time
 from main import reddit, giphy_key
 import requests
-
 number = 0
 
 vtipy = ["Víte jak začíná příběh ekologů? Bio nebio...",
@@ -256,6 +255,16 @@ def run_discord_bot(token):
         embed.timestamp = datetime.datetime.now()
 
         # Send the GIF in the channel
+        await interaction.response.send_message(embed=embed)
+
+    @client.tree.command(name="uptime", description="Jak dlouho jsem už online")
+    async def uptime(interaction: discord.Interaction):
+        current_time = time.time()
+        difference = int(round(current_time - start_time))
+        text = str(datetime.timedelta(seconds=difference))
+        embed = discord.Embed(color=65535)
+        embed.add_field(name="Doba", value=text)
+        embed.timestamp = datetime.datetime.now()
         await interaction.response.send_message(embed=embed)
 
     @client.event
