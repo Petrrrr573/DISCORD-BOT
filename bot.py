@@ -10,6 +10,28 @@ from main import reddit, giphy_key
 import requests
 number = 0
 
+ws = "\N{WHITE LARGE SQUARE}"
+bs = "\N{BLACK LARGE SQUARE}"
+head = ":flushed:"
+
+reactions = ["⬆️", "⬇️", "⬅️", "➡️" , "🔄", "❌"]
+
+levelOne = [[ws for _ in range(10)] for _ in range(7)]
+
+def build_walls(levelONe):
+    rows = 7
+    columns = 10
+    for i in range(rows):
+        levelOne[i][0] = bs
+        levelOne[i][columns-1] = bs
+    for j in range(1, columns-1):
+        levelOne[0][j] = bs
+        levelOne[rows-1][j] = bs
+
+    levelOne[1][1] = head
+    
+    return levelOne
+
 vtipy = ["Víte jak začíná příběh ekologů? Bio nebio...",
          "Víte, proč krab nemá peníze? Protože je na dně.",
          "Na obale salámu je napsáno: Na 100 g výrobku bylo použito 125 g masa.",
@@ -126,7 +148,6 @@ async def send_message(message, user_message, is_private):
         print(e)
 
 def run_discord_bot(token):
-    number = 0
     TOKEN = token
     start_time = time.time()
     # intents = discord.Intents.default()
@@ -146,11 +167,11 @@ def run_discord_bot(token):
 
         await client.change_presence(status=discord.Status.online,activity=discord.Game('/pomoc'))
 
-        for server in client.guilds:
-            channel = discord.utils.get(server.channels, name="123")
-            if channel is not None:
-                # Send a message to the channel
-                await channel.send("Bot byl znovu zapnut, počítání se restartvovalo. Napište `1` abyste začali")
+        # for server in client.guilds:
+        #     channel = discord.utils.get(server.channels, name="123")
+        #     if channel is not None:
+        #         # Send a message to the channel
+        #         await channel.send("Bot byl znovu zapnut, počítání se restartvovalo. Napište `1` abyste začali")
 
     @client.tree.command(name="ahoj", description="Pozdrav mě")
     async def ahoj(interaction: discord.Interaction):
@@ -227,17 +248,6 @@ def run_discord_bot(token):
 
         await interaction.response.send_message(embed=embed)
         await interaction.followup.send(embed=embed_link)
-                
-
-    @client.tree.command(name="uptime", description="Jak dlouho jsem už online")
-    async def uptime(interaction: discord.Interaction):
-        current_time = time.time()
-        difference = int(round(current_time - start_time))
-        text = str(datetime.timedelta(seconds=difference))
-        embed = discord.Embed(color=65535)
-        embed.add_field(name="Doba", value=text)
-        embed.timestamp = datetime.datetime.now()
-        await interaction.response.send_message(embed=embed)
     
     @client.tree.command(name="gif", description="Gif podle tvého zadání (v Angličtině")
     @app_commands.describe(název="Název? (v Angličtině)")
@@ -266,10 +276,35 @@ def run_discord_bot(token):
         embed.add_field(name="Doba", value=text)
         embed.timestamp = datetime.datetime.now()
         await interaction.response.send_message(embed=embed)
+    
+    @client.tree.command(name="game_test")
+    async def game_test(interaction: discord.Interaction):
+        global levelOne
+        levelOne = build_walls(levelOne)
+        square_str = "\n".join("".join(row) for row in levelOne)
+        await interaction.response.send_message(square_str)
+    
+    @client.event
+    async def on_raw_reaction_add(payload):
+        message_id = payload.message_id
+        emoji = payload.emoji
+        channel_id = payload.channel_id
+
+        channel = client.get_channel(channel_id)
+        message = await channel.fetch_message(message_id)
+        
+        for reaction in message.reactions:
+            if str(reaction.emoji) in reactions and reaction.count == 2:
+                print("MASOOOOOOO")
+                break
 
     @client.event
     async def on_message(message):
-        global number
+        global number, reactions
+        if message.content == "\n".join("".join(row) for row in levelOne):
+            for i in range(6):
+                await message.add_reaction(reactions[i])
+
         # Make sure bot doesn't get stuck in an infinite loop
         if message.author == client.user:
             return
