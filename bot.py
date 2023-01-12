@@ -3,6 +3,7 @@ import responses
 import main
 from discord.ext import commands
 from discord import app_commands
+from discord.ui import Button, View
 import random
 import praw
 import datetime, time
@@ -24,8 +25,20 @@ class Game:
         self.ws = "\N{WHITE LARGE SQUARE}"
         self.bs = "\N{BLACK LARGE SQUARE}"
         self.head = ":flushed:"
+        self.x = 1
+        self.y = 1
 
         self.levelOne = [[self.ws for _ in range(10)] for _ in range(7)]
+
+        self.levelOne[self.x][self.y] = self.head
+
+        self.build_walls()
+
+    def make_string(self):
+        self.levelOne = [[self.ws for _ in range(10)] for _ in range(7)]
+        self.build_walls()
+        self.levelOne[self.x][self.y] = self.head
+        self.square_str = "\n".join("".join(row) for row in self.levelOne)
 
     def build_walls(self):
         rows = 7
@@ -36,8 +49,7 @@ class Game:
         for j in range(1, columns-1):
             self.levelOne[0][j] = self.bs
             self.levelOne[rows-1][j] = self.bs
-
-        self.levelOne[1][1] = self.head
+ 
 
 vtipy = ["Víte jak začíná příběh ekologů? Bio nebio...",
          "Víte, proč krab nemá peníze? Protože je na dně.",
@@ -287,10 +299,65 @@ def run_discord_bot(token):
     @client.tree.command(name="game_test")
     async def game_test(interaction: discord.Interaction):
         global reactions, game
+        embed = discord.Embed(title="GAME-TEST", color=65535)
         game = Game()
-        game.build_walls()
-        square_str = "\n".join("".join(row) for row in game.levelOne)
-        await interaction.response.send_message(square_str)
+        game.make_string()
+        square_str = game.square_str
+        embed.add_field(name="Level 1", value=square_str)
+        button1 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[0])
+        button2 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[1])
+        button3 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[2])
+        button4 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[3])
+        button5 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[4])
+        button6 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[5])
+
+        async def button1_callback(interaction):
+            game.x -= 1
+            game.make_string()
+            square_str = game.square_str
+            embed1 = discord.Embed(title="GAME-TEST", color=65535)
+            embed1.add_field(name="Level 1", value=square_str)
+            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[0]}", embed=embed1)
+        async def button2_callback(interaction):
+            game.x += 1
+            game.make_string()
+            square_str = game.square_str
+            embed1 = discord.Embed(title="GAME-TEST", color=65535)
+            embed1.add_field(name="Level 1", value=square_str)
+            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[1]}", embed=embed1)
+        async def button3_callback(interaction):
+            game.y -= 1
+            game.make_string()
+            square_str = game.square_str
+            embed1 = discord.Embed(title="GAME-TEST", color=65535)
+            embed1.add_field(name="Level 1", value=square_str)
+            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[2]}", embed=embed1)
+        async def button4_callback(interaction):
+            game.y += 1
+            game.make_string()
+            square_str = game.square_str
+            embed1 = discord.Embed(title="GAME-TEST", color=65535)
+            embed1.add_field(name="Level 1", value=square_str)
+            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[0]}", embed=embed1)
+        async def button5_callback(interaction):
+            pass
+        async def button6_callback(interaction):
+            pass
+        
+        button1.callback = button1_callback
+        button2.callback = button2_callback
+        button3.callback = button3_callback
+        button4.callback = button4_callback
+
+        view = View()
+        view.add_item(button1)
+        view.add_item(button2)
+        view.add_item(button3)
+        view.add_item(button4)
+        view.add_item(button5)
+        view.add_item(button6)
+
+        await interaction.response.send_message(embed=embed, view=view)
     
     @client.event
     async def on_raw_reaction_add(payload):
