@@ -16,21 +16,28 @@ head = ":flushed:"
 
 reactions = ["⬆️", "⬇️", "⬅️", "➡️" , "🔄", "❌"]
 
-levelOne = [[ws for _ in range(10)] for _ in range(7)]
+game = None
 
-def build_walls(levelONe):
-    rows = 7
-    columns = 10
-    for i in range(rows):
-        levelOne[i][0] = bs
-        levelOne[i][columns-1] = bs
-    for j in range(1, columns-1):
-        levelOne[0][j] = bs
-        levelOne[rows-1][j] = bs
+class Game:
+    def __init__(self):
+        self.reactions = ["⬆️", "⬇️", "⬅️", "➡️" , "🔄", "❌"]
+        self.ws = "\N{WHITE LARGE SQUARE}"
+        self.bs = "\N{BLACK LARGE SQUARE}"
+        self.head = ":flushed:"
 
-    levelOne[1][1] = head
-    
-    return levelOne
+        self.levelOne = [[self.ws for _ in range(10)] for _ in range(7)]
+
+    def build_walls(self):
+        rows = 7
+        columns = 10
+        for i in range(rows):
+            self.levelOne[i][0] = self.bs
+            self.levelOne[i][columns-1] = self.bs
+        for j in range(1, columns-1):
+            self.levelOne[0][j] = self.bs
+            self.levelOne[rows-1][j] = self.bs
+
+        self.levelOne[1][1] = self.head
 
 vtipy = ["Víte jak začíná příběh ekologů? Bio nebio...",
          "Víte, proč krab nemá peníze? Protože je na dně.",
@@ -279,9 +286,10 @@ def run_discord_bot(token):
     
     @client.tree.command(name="game_test")
     async def game_test(interaction: discord.Interaction):
-        global levelOne
-        levelOne = build_walls(levelOne)
-        square_str = "\n".join("".join(row) for row in levelOne)
+        global reactions, game
+        game = Game()
+        game.build_walls()
+        square_str = "\n".join("".join(row) for row in game.levelOne)
         await interaction.response.send_message(square_str)
     
     @client.event
@@ -300,8 +308,8 @@ def run_discord_bot(token):
 
     @client.event
     async def on_message(message):
-        global number, reactions
-        if message.content == "\n".join("".join(row) for row in levelOne):
+        global number, reactions, game
+        if message.content == "\n".join("".join(row) for row in game.levelOne):
             for i in range(6):
                 await message.add_reaction(reactions[i])
 
