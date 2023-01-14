@@ -24,11 +24,28 @@ game = None
 class Game:
     def __init__(self):
         self.reactions = ["⬆️", "⬇️", "⬅️", "➡️" , "🔄", "❌"]
-        self.ws = "\N{WHITE LARGE SQUARE}"
-        self.bs = "\N{BLACK LARGE SQUARE}"
-        self.bbs = ":brown_square:"
-        self.sc = ":negative_squared_cross_mark:"
-        self.head = ":flushed:"
+        self.borders = ["⬜", "🟪", "🟥", "🟧" , "🟨", "🟩", "🟦"]
+        self.gs = "⬛"
+        self.bs = random.choice(self.borders)
+        self.bbs = "🟫"
+        self.sc = "❎"
+        self.head = "😳"
+        self.x = 1
+        self.y = 1
+        self.rows = 7
+        self.columns = 10
+        self.squares = []
+        self.crosses = []
+
+        self.level = 1
+
+        self.possible_squares = []
+        self.possible_crosses = []
+
+        self.grid()
+
+    def reset(self):
+        self.bs = random.choice(self.borders)
         self.x = 1
         self.y = 1
         self.rows = 7
@@ -53,28 +70,24 @@ class Game:
             rand_cr = random.choice(self.possible_crosses)
             self.crosses.append(rand_cr)
             x, y = rand_cr
-            self.levelOne[x][y] = sc
+            self.levelOne[x][y] = self.sc
 
         for i in range(self.rows-4):
             for j in range(self.columns-4):
                 if self.x != i+2 and self.y != j+2 and [i+2, j+2] not in self.squares:
                     self.possible_squares.append([i+2, j+2])
-                    print(i+2, j+2)
         
         for i in range(self.level):
             rand_sq = random.choice(self.possible_squares)
             self.squares.append(rand_sq)
             x, y = rand_sq
-            self.levelOne[x][y] = bbs
+            self.levelOne[x][y] = self.bbs
 
     def make_string(self):
         self.square_str = "\n".join("".join(row) for row in self.levelOne)
-        if self.crosses == []:
-            self.level += 1
-            self.grid()
 
     def grid(self):
-        self.levelOne = [[self.ws for _ in range(10)] for _ in range(7)]
+        self.levelOne = [[self.gs for _ in range(10)] for _ in range(7)]
         self.build_walls()
         self.levelOne[self.x][self.y] = self.head
         self.place_squares()
@@ -89,48 +102,54 @@ class Game:
 
     def move(self, side):
         if side == "up":
-            if self.levelOne[self.x-1][self.y] != bs and self.levelOne[self.x-1][self.y] != sc:
-                if self.levelOne[self.x-1][self.y] == bbs:
-                    if self.levelOne[self.x-2][self.y] == sc:
-                        self.levelOne[self.x-2][self.y] = bs
+            if self.levelOne[self.x-1][self.y] != self.bs and self.levelOne[self.x-1][self.y] != self.sc:
+                if self.levelOne[self.x-1][self.y] == self.bbs:
+                    if self.levelOne[self.x-2][self.y] == self.sc:
+                        self.levelOne[self.x-2][self.y] = self.bs
                         self.crosses.remove([self.x-2, self.y])
-                    elif self.levelOne[self.x-2][self.y] != bs:
-                        self.levelOne[self.x-2][self.y] = bbs
-                self.levelOne[self.x][self.y] = ws
+                    elif self.levelOne[self.x-2][self.y] != self.bs:
+                        self.levelOne[self.x-2][self.y] = self.bbs
+                self.levelOne[self.x][self.y] = self.gs
                 self.x -= 1
 
         if side == "down":
-            if self.levelOne[self.x+1][self.y] != bs and self.levelOne[self.x+1][self.y] != sc:
-                if self.levelOne[self.x+1][self.y] == bbs:
-                    if self.levelOne[self.x+2][self.y] == sc:
-                        self.levelOne[self.x+2][self.y] = bs
+            if self.levelOne[self.x+1][self.y] != self.bs and self.levelOne[self.x+1][self.y] != self.sc:
+                if self.levelOne[self.x+1][self.y] == self.bbs:
+                    if self.levelOne[self.x+2][self.y] == self.sc:
+                        self.levelOne[self.x+2][self.y] = self.bs
                         self.crosses.remove([self.x+2, self.y])
-                    elif self.levelOne[self.x+2][self.y] != bs:
-                        self.levelOne[self.x+2][self.y] = bbs
-                self.levelOne[self.x][self.y] = ws
+                    elif self.levelOne[self.x+2][self.y] != self.bs:
+                        self.levelOne[self.x+2][self.y] = self.bbs
+                self.levelOne[self.x][self.y] = self.gs
                 self.x += 1
         if side == "left":
             if self.levelOne[self.x][self.y-1] != bs and self.levelOne[self.x][self.y-1] != sc:
-                if self.levelOne[self.x][self.y-1] == bbs:
-                    if self.levelOne[self.x][self.y-2] == sc:
-                        self.levelOne[self.x][self.y-2] = bs
+                if self.levelOne[self.x][self.y-1] == self.bbs:
+                    if self.levelOne[self.x][self.y-2] == self.sc:
+                        self.levelOne[self.x][self.y-2] = self.bs
                         self.crosses.remove([self.x, self.y-2])
-                    elif self.levelOne[self.x][self.y-2] != bs:
-                        self.levelOne[self.x][self.y-2] = bbs
-                self.levelOne[self.x][self.y] = ws
+                    elif self.levelOne[self.x][self.y-2] != self.bs:
+                        self.levelOne[self.x][self.y-2] = self.bbs
+                self.levelOne[self.x][self.y] = self.gs
                 self.y -= 1
         if side == "right":
-            if self.levelOne[self.x][self.y+1] != bs and self.levelOne[self.x][self.y+1] != sc:
-                if self.levelOne[self.x][self.y+1] == bbs:
-                    if self.levelOne[self.x][self.y+2] == sc:
-                        self.levelOne[self.x][self.y+2] = bs
+            if self.levelOne[self.x][self.y+1] != self.bs and self.levelOne[self.x][self.y+1] != self.sc:
+                if self.levelOne[self.x][self.y+1] == self.bbs:
+                    if self.levelOne[self.x][self.y+2] == self.sc:
+                        self.levelOne[self.x][self.y+2] = self.bs
                         self.crosses.remove([self.x, self.y+2])
-                    elif self.levelOne[self.x][self.y+2] != bs:
-                        self.levelOne[self.x][self.y+2] = bbs
-                self.levelOne[self.x][self.y] = ws
+                    elif self.levelOne[self.x][self.y+2] != self.bs:
+                        self.levelOne[self.x][self.y+2] = self.bbs
+                self.levelOne[self.x][self.y] = self.gs
                 self.y += 1
         
         self.levelOne[self.x][self.y] = self.head
+
+        if self.crosses == []:
+            self.level += 1
+            self.grid()
+            self.x = 0
+            self.y = 0
 
 vtipy = ["Víte jak začíná příběh ekologů? Bio nebio...",
          "Víte, proč krab nemá peníze? Protože je na dně.",
@@ -377,13 +396,13 @@ def run_discord_bot(token):
         embed.timestamp = datetime.datetime.now()
         await interaction.response.send_message(embed=embed)
     
-    @client.tree.command(name="game_test")
-    async def game_test(interaction: discord.Interaction):
+    @client.tree.command(name="soko-hra", description="HRA")
+    async def soko_hra(interaction: discord.Interaction):
         global reactions, game
-        embed = discord.Embed(title="GAME-TEST", color=65535)
+        embed = discord.Embed(title="SOKO-HRA", color=65535)
         game = Game()
         game.make_string()
-        embed.add_field(name="Level 1", value=game.square_str)
+        embed.add_field(name=f"Level {game.level}", value=game.square_str)
         button1 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[0])
         button2 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[1])
         button3 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[2])
@@ -394,36 +413,44 @@ def run_discord_bot(token):
         async def button1_callback(interaction):
             game.move("up")
             game.make_string()
-            embed1 = discord.Embed(title="GAME-TEST", color=65535)
-            embed1.add_field(name="Level 1", value=game.square_str)
-            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[0]}", embed=embed1)
+            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed.add_field(name=f"Level {game.level}", value=game.square_str)
+            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[0]}", embed=embed)
         async def button2_callback(interaction):
             game.move("down")
             game.make_string()
-            embed1 = discord.Embed(title="GAME-TEST", color=65535)
-            embed1.add_field(name="Level 1", value=game.square_str)
-            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[1]}", embed=embed1)
+            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed.add_field(name=f"Level {game.level}", value=game.square_str)
+            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[1]}", embed=embed)
         async def button3_callback(interaction):
             game.move("left")
             game.make_string()
-            embed1 = discord.Embed(title="GAME-TEST", color=65535)
-            embed1.add_field(name="Level 1", value=game.square_str)
-            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[2]}", embed=embed1)
+            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed.add_field(name=f"Level {game.level}", value=game.square_str)
+            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[2]}", embed=embed)
         async def button4_callback(interaction):
             game.move("right")
             game.make_string()
-            embed1 = discord.Embed(title="GAME-TEST", color=65535)
-            embed1.add_field(name="Level 1", value=game.square_str)
-            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[3]}", embed=embed1)
+            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed.add_field(name=f"Level {game.level}", value=game.square_str)
+            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[3]}", embed=embed)
         async def button5_callback(interaction):
-            pass
+            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            game.reset()
+            game.make_string()
+            embed.add_field(name=f"Level {game.level}", value=game.square_str)
+            await interaction.response.edit_message(embed=embed)
         async def button6_callback(interaction):
-            pass
+            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed.add_field(name="KONEC HRY", value=f"Hra byla ukončena na levelu {game.level}")
+            await interaction.response.edit_message(embed=embed)
         
         button1.callback = button1_callback
         button2.callback = button2_callback
         button3.callback = button3_callback
         button4.callback = button4_callback
+        button5.callback = button5_callback
+        button6.callback = button6_callback
 
         view = View()
         view.add_item(button1)
@@ -433,28 +460,27 @@ def run_discord_bot(token):
         view.add_item(button5)
         view.add_item(button6)
 
-        await interaction.response.send_message(embed=embed, view=view)
-    
-    @client.event
-    async def on_raw_reaction_add(payload):
-        message_id = payload.message_id
-        emoji = payload.emoji
-        channel_id = payload.channel_id
+        if game.level == 9:
+            embed = discord.Embed(title="GAME-TEST", color=65535)
+            embed.add_field(name="KONEC HRY", value=f"Vyhrál si")
+            
 
-        channel = client.get_channel(channel_id)
-        message = await channel.fetch_message(message_id)
+        await interaction.response.send_message(embed=embed, view=view)
+
+    @client.tree.command(name="soko-help", description="Informace o hře jménem Soko")
+    async def soko_help(interaction: discord.Interaction):
+        embed = discord.Embed(title=f"SOKO-HELP", color=65535)
+        embed.add_field(name="**Ovládání:**", value="⬆️ NAHORU\n\n ⬇️ DOLU \n\n ⬅️ DOLEVA \n\n ➡️ DOPRAVA \n\n 🔄 RESTART \n\n ❌ KONEC")
+
+        embed.add_field(name="**Cíl:**", value="Posouvej oranžové čtverce na zelené křížky")
+
+        embed.timestamp = datetime.datetime.now()
         
-        for reaction in message.reactions:
-            if str(reaction.emoji) in reactions and reaction.count == 2:
-                print("MASOOOOOOO")
-                break
+        await interaction.response.send_message(embed=embed)
 
     @client.event
     async def on_message(message):
         global number, reactions, game
-        if message.content == "\n".join("".join(row) for row in game.levelOne):
-            for i in range(6):
-                await message.add_reaction(reactions[i])
 
         # Make sure bot doesn't get stuck in an infinite loop
         if message.author == client.user:
