@@ -14,6 +14,8 @@ number = 0
 ws = "\N{WHITE LARGE SQUARE}"
 bs = "\N{BLACK LARGE SQUARE}"
 head = ":flushed:"
+bbs = ":brown_square:"
+sc = ":negative_squared_cross_mark:"
 
 reactions = ["⬆️", "⬇️", "⬅️", "➡️" , "🔄", "❌"]
 
@@ -24,32 +26,111 @@ class Game:
         self.reactions = ["⬆️", "⬇️", "⬅️", "➡️" , "🔄", "❌"]
         self.ws = "\N{WHITE LARGE SQUARE}"
         self.bs = "\N{BLACK LARGE SQUARE}"
+        self.bbs = ":brown_square:"
+        self.sc = ":negative_squared_cross_mark:"
         self.head = ":flushed:"
         self.x = 1
         self.y = 1
+        self.rows = 7
+        self.columns = 10
+        self.squares = []
+        self.crosses = []
 
-        self.levelOne = [[self.ws for _ in range(10)] for _ in range(7)]
+        self.level = 1
 
-        self.levelOne[self.x][self.y] = self.head
+        self.possible_squares = []
+        self.possible_crosses = []
 
-        self.build_walls()
+        self.grid()
+    
+    def place_squares(self):
+        for i in range(self.rows-2):
+            for j in range(self.columns-2):
+                if self.x != i+1 and self.y != j+1:
+                    self.possible_crosses.append([i+1, j+1])
+                    
+        for i in range(self.level):
+            rand_cr = random.choice(self.possible_crosses)
+            self.crosses.append(rand_cr)
+            x, y = rand_cr
+            self.levelOne[x][y] = sc
+
+        for i in range(self.rows-4):
+            for j in range(self.columns-4):
+                if self.x != i+2 and self.y != j+2 and [i+2, j+2] not in self.squares:
+                    self.possible_squares.append([i+2, j+2])
+                    print(i+2, j+2)
+        
+        for i in range(self.level):
+            rand_sq = random.choice(self.possible_squares)
+            self.squares.append(rand_sq)
+            x, y = rand_sq
+            self.levelOne[x][y] = bbs
 
     def make_string(self):
+        self.square_str = "\n".join("".join(row) for row in self.levelOne)
+        if self.crosses == []:
+            self.level += 1
+            self.grid()
+
+    def grid(self):
         self.levelOne = [[self.ws for _ in range(10)] for _ in range(7)]
         self.build_walls()
         self.levelOne[self.x][self.y] = self.head
-        self.square_str = "\n".join("".join(row) for row in self.levelOne)
+        self.place_squares()
 
     def build_walls(self):
-        rows = 7
-        columns = 10
-        for i in range(rows):
+        for i in range(self.rows):
             self.levelOne[i][0] = self.bs
-            self.levelOne[i][columns-1] = self.bs
-        for j in range(1, columns-1):
+            self.levelOne[i][self.columns-1] = self.bs
+        for j in range(1, self.columns-1):
             self.levelOne[0][j] = self.bs
-            self.levelOne[rows-1][j] = self.bs
- 
+            self.levelOne[self.rows-1][j] = self.bs
+
+    def move(self, side):
+        if side == "up":
+            if self.levelOne[self.x-1][self.y] != bs and self.levelOne[self.x-1][self.y] != sc:
+                if self.levelOne[self.x-1][self.y] == bbs:
+                    if self.levelOne[self.x-2][self.y] == sc:
+                        self.levelOne[self.x-2][self.y] = bs
+                        self.crosses.remove([self.x-2, self.y])
+                    elif self.levelOne[self.x-2][self.y] != bs:
+                        self.levelOne[self.x-2][self.y] = bbs
+                self.levelOne[self.x][self.y] = ws
+                self.x -= 1
+
+        if side == "down":
+            if self.levelOne[self.x+1][self.y] != bs and self.levelOne[self.x+1][self.y] != sc:
+                if self.levelOne[self.x+1][self.y] == bbs:
+                    if self.levelOne[self.x+2][self.y] == sc:
+                        self.levelOne[self.x+2][self.y] = bs
+                        self.crosses.remove([self.x+2, self.y])
+                    elif self.levelOne[self.x+2][self.y] != bs:
+                        self.levelOne[self.x+2][self.y] = bbs
+                self.levelOne[self.x][self.y] = ws
+                self.x += 1
+        if side == "left":
+            if self.levelOne[self.x][self.y-1] != bs and self.levelOne[self.x][self.y-1] != sc:
+                if self.levelOne[self.x][self.y-1] == bbs:
+                    if self.levelOne[self.x][self.y-2] == sc:
+                        self.levelOne[self.x][self.y-2] = bs
+                        self.crosses.remove([self.x, self.y-2])
+                    elif self.levelOne[self.x][self.y-2] != bs:
+                        self.levelOne[self.x][self.y-2] = bbs
+                self.levelOne[self.x][self.y] = ws
+                self.y -= 1
+        if side == "right":
+            if self.levelOne[self.x][self.y+1] != bs and self.levelOne[self.x][self.y+1] != sc:
+                if self.levelOne[self.x][self.y+1] == bbs:
+                    if self.levelOne[self.x][self.y+2] == sc:
+                        self.levelOne[self.x][self.y+2] = bs
+                        self.crosses.remove([self.x, self.y+2])
+                    elif self.levelOne[self.x][self.y+2] != bs:
+                        self.levelOne[self.x][self.y+2] = bbs
+                self.levelOne[self.x][self.y] = ws
+                self.y += 1
+        
+        self.levelOne[self.x][self.y] = self.head
 
 vtipy = ["Víte jak začíná příběh ekologů? Bio nebio...",
          "Víte, proč krab nemá peníze? Protože je na dně.",
@@ -302,8 +383,7 @@ def run_discord_bot(token):
         embed = discord.Embed(title="GAME-TEST", color=65535)
         game = Game()
         game.make_string()
-        square_str = game.square_str
-        embed.add_field(name="Level 1", value=square_str)
+        embed.add_field(name="Level 1", value=game.square_str)
         button1 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[0])
         button2 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[1])
         button3 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[2])
@@ -312,33 +392,29 @@ def run_discord_bot(token):
         button6 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[5])
 
         async def button1_callback(interaction):
-            game.x -= 1
+            game.move("up")
             game.make_string()
-            square_str = game.square_str
             embed1 = discord.Embed(title="GAME-TEST", color=65535)
-            embed1.add_field(name="Level 1", value=square_str)
+            embed1.add_field(name="Level 1", value=game.square_str)
             await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[0]}", embed=embed1)
         async def button2_callback(interaction):
-            game.x += 1
+            game.move("down")
             game.make_string()
-            square_str = game.square_str
             embed1 = discord.Embed(title="GAME-TEST", color=65535)
-            embed1.add_field(name="Level 1", value=square_str)
+            embed1.add_field(name="Level 1", value=game.square_str)
             await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[1]}", embed=embed1)
         async def button3_callback(interaction):
-            game.y -= 1
+            game.move("left")
             game.make_string()
-            square_str = game.square_str
             embed1 = discord.Embed(title="GAME-TEST", color=65535)
-            embed1.add_field(name="Level 1", value=square_str)
+            embed1.add_field(name="Level 1", value=game.square_str)
             await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[2]}", embed=embed1)
         async def button4_callback(interaction):
-            game.y += 1
+            game.move("right")
             game.make_string()
-            square_str = game.square_str
             embed1 = discord.Embed(title="GAME-TEST", color=65535)
-            embed1.add_field(name="Level 1", value=square_str)
-            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[0]}", embed=embed1)
+            embed1.add_field(name="Level 1", value=game.square_str)
+            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[3]}", embed=embed1)
         async def button5_callback(interaction):
             pass
         async def button6_callback(interaction):
