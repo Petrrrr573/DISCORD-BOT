@@ -131,7 +131,7 @@ class Game:
                 self.levelOne[self.x][self.y] = self.gs
                 self.x += 1
         if side == "left":
-            if self.levelOne[self.x][self.y-1] != self.bs and self.levelOne[self.x][self.y-1] != sc:
+            if self.levelOne[self.x][self.y-1] != self.bs and self.levelOne[self.x][self.y-1] != self.sc:
                 if self.levelOne[self.x][self.y-1] == self.bbs:
                     if self.levelOne[self.x][self.y-2] == self.sc:
                         self.levelOne[self.x][self.y-2] = self.bs
