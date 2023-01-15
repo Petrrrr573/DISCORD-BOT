@@ -135,16 +135,12 @@ class Game:
                 self.x += 1
         if side == "left":
             if self.levelOne[self.x][self.y-1] != self.bs and self.levelOne[self.x][self.y-1] != sc:
-                print("nei zed nebo kříž")
                 if self.levelOne[self.x][self.y-1] == self.bbs:
-                    print("je oranžovej")
                     if self.levelOne[self.x][self.y-2] == self.sc:
-                        print("je zelenej")
                         self.levelOne[self.x][self.y-2] = self.bs
                         self.squares.remove([self.x, self.y-1])
                         self.crosses.remove([self.x, self.y-2])
                     elif self.levelOne[self.x][self.y-2] != self.bs:
-                        print("neni zelenej")
                         self.levelOne[self.x][self.y-2] = self.bbs
                         index = self.squares.index([self.x, self.y-1])
                         self.squares[index] = [self.x, self.y-2]
@@ -165,9 +161,6 @@ class Game:
                 self.y += 1
         
         self.levelOne[self.x][self.y] = self.head
-
-        print(self.squares)
-        print(self.crosses)
 
         if self.crosses == []:
             self.level += 1
@@ -364,6 +357,7 @@ def run_discord_bot(token):
         embed.add_field(name="/vtip", value="Řeknu ti jeden ze 100 vtipů")
         embed.add_field(name="/reddit", value="Vezmu náhody post z redditu, který vybereš")
         embed.add_field(name="/uptime", value="Zjistíš jak dlouho už jsem online")
+        embed.add_field(name="/gif", value="Pomocí Giphy API pošlu gif podle názvu v Angličtině")
         embed.add_field(name="/pomoc", value="Pomůžu ti")
 
         embed.timestamp = datetime.datetime.now()
@@ -393,6 +387,24 @@ def run_discord_bot(token):
         await interaction.response.send_message(embed=embed)
         await interaction.followup.send(embed=embed_link)
     
+    @client.tree.command(name="gif", description="Gif podle tvého zadání (v Angličtině")
+    @app_commands.describe(název="Název? (v Angličtině)")
+    async def gif(interaction: discord.Interaction, název: str):
+
+        # Make a request to the Giphy API to search for GIFs
+        api_key = giphy_key
+        r = requests.get(f'http://api.giphy.com/v1/gifs/search?api_key={api_key}&q={název}')
+
+        # Get the first GIF from the search results
+        gif_url = r.json()['data'][random.randint(1, 25)]['images']['original']['url']
+
+        embed = discord.Embed(title=název, color=65535)
+        embed.set_image(url=gif_url)
+        embed.timestamp = datetime.datetime.now()
+
+        # Send the GIF in the channel
+        await interaction.response.send_message(embed=embed)
+
     @client.tree.command(name="uptime", description="Jak dlouho jsem už online")
     async def uptime(interaction: discord.Interaction):
         current_time = time.time()
@@ -401,6 +413,88 @@ def run_discord_bot(token):
         embed = discord.Embed(color=65535)
         embed.add_field(name="Doba", value=text)
         embed.timestamp = datetime.datetime.now()
+        await interaction.response.send_message(embed=embed)
+    
+    @client.tree.command(name="soko-hra", description="HRA")
+    async def soko_hra(interaction: discord.Interaction):
+        global reactions, game
+        embed = discord.Embed(title="SOKO-HRA", color=65535)
+        game = Game()
+        game.make_string()
+        embed.add_field(name=f"Level {game.level}", value=game.square_str)
+        button1 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[0])
+        button2 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[1])
+        button3 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[2])
+        button4 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[3])
+        button5 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[4])
+        button6 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[5])
+
+        async def button1_callback(interaction):
+            game.move("up")
+            game.make_string()
+            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed.add_field(name=f"Level {game.level}", value=game.square_str)
+            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[0]}", embed=embed)
+        async def button2_callback(interaction):
+            game.move("down")
+            game.make_string()
+            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed.add_field(name=f"Level {game.level}", value=game.square_str)
+            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[1]}", embed=embed)
+        async def button3_callback(interaction):
+            game.move("left")
+            game.make_string()
+            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed.add_field(name=f"Level {game.level}", value=game.square_str)
+            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[2]}", embed=embed)
+        async def button4_callback(interaction):
+            game.move("right")
+            game.make_string()
+            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed.add_field(name=f"Level {game.level}", value=game.square_str)
+            await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[3]}", embed=embed)
+        async def button5_callback(interaction):
+            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            game.reset()
+            game.make_string()
+            embed.add_field(name=f"Level {game.level}", value=game.square_str)
+            await interaction.response.edit_message(embed=embed)
+        async def button6_callback(interaction):
+            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed.add_field(name="KONEC HRY", value=f"Hra byla ukončena na levelu {game.level}")
+            await interaction.response.edit_message(embed=embed)
+        
+        button1.callback = button1_callback
+        button2.callback = button2_callback
+        button3.callback = button3_callback
+        button4.callback = button4_callback
+        button5.callback = button5_callback
+        button6.callback = button6_callback
+
+        view = View()
+        view.add_item(button1)
+        view.add_item(button2)
+        view.add_item(button3)
+        view.add_item(button4)
+        view.add_item(button5)
+        view.add_item(button6)
+
+        if game.level == 9:
+            embed = discord.Embed(title="GAME-TEST", color=65535)
+            embed.add_field(name="KONEC HRY", value=f"Vyhrál si")
+            
+
+        await interaction.response.send_message(embed=embed, view=view)
+
+    @client.tree.command(name="soko-help", description="Informace o hře jménem Soko")
+    async def soko_help(interaction: discord.Interaction):
+        embed = discord.Embed(title=f"SOKO-HELP", color=65535)
+        embed.add_field(name="**Ovládání:**", value="⬆️ NAHORU\n\n ⬇️ DOLU \n\n ⬅️ DOLEVA \n\n ➡️ DOPRAVA \n\n 🔄 RESTART \n\n ❌ KONEC")
+
+        embed.add_field(name="**Cíl:**", value="Posouvej oranžové čtverce na zelené křížky")
+
+        embed.timestamp = datetime.datetime.now()
+        
         await interaction.response.send_message(embed=embed)
 
     @client.event
