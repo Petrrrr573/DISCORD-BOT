@@ -3,12 +3,179 @@ import responses
 import main
 from discord.ext import commands
 from discord import app_commands
+from discord.ui import Button, View
 import random
 import praw
 import datetime, time
-import openai
-
+from main import reddit, giphy_key
+import requests
 number = 0
+
+ws = "\N{WHITE LARGE SQUARE}"
+bs = "\N{BLACK LARGE SQUARE}"
+head = ":flushed:"
+bbs = ":brown_square:"
+sc = ":negative_squared_cross_mark:"
+
+reactions = ["⬆️", "⬇️", "⬅️", "➡️" , "🔄", "❌"]
+
+game = None
+
+class Game:
+    def __init__(self):
+        self.reactions = ["⬆️", "⬇️", "⬅️", "➡️" , "🔄", "❌"]
+        self.borders = ["⬜", "🟪", "🟥", "🟧" , "🟨", "🟩", "🟦"]
+        self.gs = "⬛"
+        self.bs = random.choice(self.borders)
+        self.bbs = "🟫"
+        self.sc = "❎"
+        self.head = "😳"
+        self.x = 1
+        self.y = 1
+        self.rows = 7
+        self.columns = 10
+        self.squares = []
+        self.crosses = []
+
+        self.level = 1
+
+        self.possible_squares = []
+        self.possible_crosses = []
+
+        self.grid()
+
+    def reset(self):
+        self.bs = random.choice(self.borders)
+        self.x = 1
+        self.y = 1
+        self.rows = 7
+        self.columns = 10
+        self.squares = []
+        self.crosses = []
+
+        self.level = 1
+
+        self.possible_squares = []
+        self.possible_crosses = []
+
+        self.grid()
+    
+    def place_squares(self):
+        for i in range(self.rows-2):
+            for j in range(self.columns-2):
+                if i+1 != 0 and j+1 != 0:
+                    self.possible_crosses.append([i+1, j+1])
+                    
+        for i in range(self.level):
+            rand_cr = random.choice(self.possible_crosses)
+            self.crosses.append(rand_cr)
+            x, y = rand_cr
+            self.possible_crosses.remove([x, y])
+            self.levelOne[x][y] = self.sc
+
+        for i in range(self.rows-4):
+            for j in range(self.columns-4):
+                if i+2 != 0 and j+2 != 0 and [i+2, j+2] not in self.crosses:
+                    self.possible_squares.append([i+2, j+2])
+        
+        for i in range(self.level):
+            rand_sq = random.choice(self.possible_squares)
+            self.squares.append(rand_sq)
+            x, y = rand_sq
+            self.possible_squares.remove([x, y])
+            self.levelOne[x][y] = self.bbs
+        
+        self.possible_squares = []
+        self.possible_crosses = []
+
+    def make_string(self):
+        self.square_str = "\n".join("".join(row) for row in self.levelOne)
+
+    def grid(self):
+        self.levelOne = [[self.gs for _ in range(10)] for _ in range(7)]
+        self.build_walls()
+        self.levelOne[self.x][self.y] = self.head
+        self.place_squares()
+
+    def build_walls(self):
+        for i in range(self.rows):
+            self.levelOne[i][0] = self.bs
+            self.levelOne[i][self.columns-1] = self.bs
+        for j in range(1, self.columns-1):
+            self.levelOne[0][j] = self.bs
+            self.levelOne[self.rows-1][j] = self.bs
+
+    def move(self, side):
+        if side == "up":
+            if self.levelOne[self.x-1][self.y] != self.bs and self.levelOne[self.x-1][self.y] != self.sc:
+                if self.levelOne[self.x-1][self.y] == self.bbs:
+                    if self.levelOne[self.x-2][self.y] == self.sc:
+                        self.levelOne[self.x-2][self.y] = self.bs
+                        self.squares.remove([self.x-1, self.y])
+                        self.crosses.remove([self.x-2, self.y])
+                    elif self.levelOne[self.x-2][self.y] != self.bs:
+                        self.levelOne[self.x-2][self.y] = self.bbs
+                        index = self.squares.index([self.x-1, self.y])
+                        self.squares[index] = [self.x-2, self.y]
+                self.levelOne[self.x][self.y] = self.gs
+                self.x -= 1
+
+        if side == "down":
+            if self.levelOne[self.x+1][self.y] != self.bs and self.levelOne[self.x+1][self.y] != self.sc:
+                if self.levelOne[self.x+1][self.y] == self.bbs:
+                    if self.levelOne[self.x+2][self.y] == self.sc:
+                        self.levelOne[self.x+2][self.y] = self.bs
+                        self.squares.remove([self.x+1, self.y])
+                        self.crosses.remove([self.x+2, self.y])
+                    elif self.levelOne[self.x+2][self.y] != self.bs:
+                        self.levelOne[self.x+2][self.y] = self.bbs
+                        index = self.squares.index([self.x+1, self.y])
+                        self.squares[index] = [self.x+2, self.y]
+                self.levelOne[self.x][self.y] = self.gs
+                self.x += 1
+        if side == "left":
+            if self.levelOne[self.x][self.y-1] != self.bs and self.levelOne[self.x][self.y-1] != sc:
+                print("nei zed nebo kříž")
+                if self.levelOne[self.x][self.y-1] == self.bbs:
+                    print("je oranžovej")
+                    if self.levelOne[self.x][self.y-2] == self.sc:
+                        print("je zelenej")
+                        self.levelOne[self.x][self.y-2] = self.bs
+                        self.squares.remove([self.x, self.y-1])
+                        self.crosses.remove([self.x, self.y-2])
+                    elif self.levelOne[self.x][self.y-2] != self.bs:
+                        print("neni zelenej")
+                        self.levelOne[self.x][self.y-2] = self.bbs
+                        index = self.squares.index([self.x, self.y-1])
+                        self.squares[index] = [self.x, self.y-2]
+                self.levelOne[self.x][self.y] = self.gs
+                self.y -= 1
+        if side == "right":
+            if self.levelOne[self.x][self.y+1] != self.bs and self.levelOne[self.x][self.y+1] != self.sc:
+                if self.levelOne[self.x][self.y+1] == self.bbs:
+                    if self.levelOne[self.x][self.y+2] == self.sc:
+                        self.levelOne[self.x][self.y+2] = self.bs
+                        self.squares.remove([self.x, self.y+1])
+                        self.crosses.remove([self.x, self.y+2])
+                    elif self.levelOne[self.x][self.y+2] != self.bs:
+                        self.levelOne[self.x][self.y+2] = self.bbs
+                        index = self.squares.index([self.x, self.y+1])
+                        self.squares[index] = [self.x, self.y+2]
+                self.levelOne[self.x][self.y] = self.gs
+                self.y += 1
+        
+        self.levelOne[self.x][self.y] = self.head
+
+        print(self.squares)
+        print(self.crosses)
+
+        if self.crosses == []:
+            self.level += 1
+            self.grid()
+            self.levelOne[self.x][self.y] = self.gs
+            self.x = 1
+            self.y = 1
+            self.levelOne[self.x][self.y] = self.head
 
 vtipy = ["Víte jak začíná příběh ekologů? Bio nebio...",
          "Víte, proč krab nemá peníze? Protože je na dně.",
@@ -126,7 +293,6 @@ async def send_message(message, user_message, is_private):
         print(e)
 
 def run_discord_bot(token):
-    number = 0
     TOKEN = token
     start_time = time.time()
     # intents = discord.Intents.default()
@@ -146,11 +312,11 @@ def run_discord_bot(token):
 
         await client.change_presence(status=discord.Status.online,activity=discord.Game('/pomoc'))
 
-        for server in client.guilds:
-            channel = discord.utils.get(server.channels, name="123")
-            if channel is not None:
-                # Send a message to the channel
-                await channel.send("Bot byl znovu zapnut, počítání se restartvovalo. Napište `1` abyste začali")
+        # for server in client.guilds:
+        #     channel = discord.utils.get(server.channels, name="123")
+        #     if channel is not None:
+        #         # Send a message to the channel
+        #         await channel.send("Bot byl znovu zapnut, počítání se restartvovalo. Napište `1` abyste začali")
 
     @client.tree.command(name="ahoj", description="Pozdrav mě")
     async def ahoj(interaction: discord.Interaction):
@@ -198,7 +364,6 @@ def run_discord_bot(token):
         embed.add_field(name="/vtip", value="Řeknu ti jeden ze 100 vtipů")
         embed.add_field(name="/reddit", value="Vezmu náhody post z redditu, který vybereš")
         embed.add_field(name="/uptime", value="Zjistíš jak dlouho už jsem online")
-        # embed.add_field(name="/chatgpt", value="Pomocí Open AI API se ti pokusím odpovědět na co se mě ptáš")
         embed.add_field(name="/pomoc", value="Pomůžu ti")
 
         embed.timestamp = datetime.datetime.now()
@@ -227,42 +392,7 @@ def run_discord_bot(token):
 
         await interaction.response.send_message(embed=embed)
         await interaction.followup.send(embed=embed_link)
-
-    # @client.tree.command(name="chatgpt", description="Co chceš vědět?")
-    # @app_commands.describe(otázka="Co chceš vědět?")
-    # async def chatgpt(interaction: discord.Interaction, otázka: str):
-    #         # Use the GPT-3 API to generate a response to the question
-    #         response = openai.Completion.create(
-    #             engine="text-davinci-002",
-    #             prompt=f"{otázka}\n",
-    #             max_tokens=1024,
-    #             n=1,
-    #             stop=None,
-    #             temperature=0.7,
-    #         )
-    #         embed = discord.Embed(title=otázka,color=65535, description=response["choices"][0]["text"])
-
-    #         embed.timestamp = datetime.datetime.now()
-
-    #         await interaction.response.send_message(embed=embed)
-
-    # @client.tree.command(name="imggenerate", description="Vygeneruji abrázek podle textu")
-    # @app_commands.describe(popis="Vygeneruji abrázek podle textu")
-    # async def img(interaction: discord.Interaction, popis: str):
-    #         response = openai.Image.create(
-    #         prompt=popis,
-    #         n=1,
-    #         size="1024x1024"
-    #         )
-    #         image_url = response['data'][0]['url']
-    #         print(image_url)
-    #         for server in client.guilds:
-    #             channel = discord.utils.get(server.channels, od=interaction.channel_id)
-    #             if channel is not None:
-    #                 # Send a message to the channel
-    #                 await channel.send(image_url)
-                
-
+    
     @client.tree.command(name="uptime", description="Jak dlouho jsem už online")
     async def uptime(interaction: discord.Interaction):
         current_time = time.time()
@@ -275,7 +405,8 @@ def run_discord_bot(token):
 
     @client.event
     async def on_message(message):
-        global number
+        global number, reactions, game
+
         # Make sure bot doesn't get stuck in an infinite loop
         if message.author == client.user:
             return

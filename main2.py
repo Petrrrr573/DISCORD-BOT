@@ -12,3 +12,4 @@ reddit = praw.Reddit(client_id = "",
                     user_agent = "")
 
 openai.api_key = "YOUR_KEY"
+
