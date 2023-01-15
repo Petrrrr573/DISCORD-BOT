@@ -161,8 +161,8 @@ class Game:
 
         if self.crosses == []:
             self.level += 1
-            self.grid()
             self.levelOne[self.x][self.y] = self.gs
+            self.grid()
             self.x = 1
             self.y = 1
             self.levelOne[self.x][self.y] = self.head
@@ -476,7 +476,7 @@ def run_discord_bot(token):
         view.add_item(button5)
         view.add_item(button6)
 
-        if game.level == 9:
+        if game.level == 8:
             embed = discord.Embed(title="GAME-TEST", color=65535)
             embed.add_field(name="KONEC HRY", value=f"Vyhrál si")
             
