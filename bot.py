@@ -37,7 +37,7 @@ class Game:
         self.squares = []
         self.crosses = []
 
-        self.level = 1
+        self.level = 6
 
         self.possible_squares = []
         self.possible_crosses = []
@@ -52,9 +52,6 @@ class Game:
         self.columns = 10
         self.squares = []
         self.crosses = []
-
-        self.level = 1
-
         self.possible_squares = []
         self.possible_crosses = []
 
@@ -63,7 +60,7 @@ class Game:
     def place_squares(self):
         for i in range(self.rows-2):
             for j in range(self.columns-2):
-                if i+1 != 0 and j+1 != 0:
+                if i+1 != 1 and j+1 != 1:
                     self.possible_crosses.append([i+1, j+1])
                     
         for i in range(self.level):
@@ -75,7 +72,7 @@ class Game:
 
         for i in range(self.rows-4):
             for j in range(self.columns-4):
-                if i+2 != 0 and j+2 != 0 and [i+2, j+2] not in self.crosses:
+                if i+2 != 1 and j+2 != 1 and [i+2, j+2] not in self.crosses:
                     self.possible_squares.append([i+2, j+2])
         
         for i in range(self.level):
