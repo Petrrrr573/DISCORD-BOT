@@ -37,7 +37,7 @@ class Game:
         self.squares = []
         self.crosses = []
 
-        self.level = 6
+        self.level = 1
 
         self.possible_squares = []
         self.possible_crosses = []
