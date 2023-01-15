@@ -63,25 +63,30 @@ class Game:
     def place_squares(self):
         for i in range(self.rows-2):
             for j in range(self.columns-2):
-                if self.x != i+1 and self.y != j+1:
+                if i+1 != 0 and j+1 != 0:
                     self.possible_crosses.append([i+1, j+1])
                     
         for i in range(self.level):
             rand_cr = random.choice(self.possible_crosses)
             self.crosses.append(rand_cr)
             x, y = rand_cr
+            self.possible_crosses.remove([x, y])
             self.levelOne[x][y] = self.sc
 
         for i in range(self.rows-4):
             for j in range(self.columns-4):
-                if self.x != i+2 and self.y != j+2 and [i+2, j+2] not in self.squares:
+                if i+2 != 0 and j+2 != 0 and [i+2, j+2] not in self.crosses:
                     self.possible_squares.append([i+2, j+2])
         
         for i in range(self.level):
             rand_sq = random.choice(self.possible_squares)
             self.squares.append(rand_sq)
             x, y = rand_sq
+            self.possible_squares.remove([x, y])
             self.levelOne[x][y] = self.bbs
+        
+        self.possible_squares = []
+        self.possible_crosses = []
 
     def make_string(self):
         self.square_str = "\n".join("".join(row) for row in self.levelOne)
@@ -106,9 +111,12 @@ class Game:
                 if self.levelOne[self.x-1][self.y] == self.bbs:
                     if self.levelOne[self.x-2][self.y] == self.sc:
                         self.levelOne[self.x-2][self.y] = self.bs
+                        self.squares.remove([self.x-1, self.y])
                         self.crosses.remove([self.x-2, self.y])
                     elif self.levelOne[self.x-2][self.y] != self.bs:
                         self.levelOne[self.x-2][self.y] = self.bbs
+                        index = self.squares.index([self.x-1, self.y])
+                        self.squares[index] = [self.x-2, self.y]
                 self.levelOne[self.x][self.y] = self.gs
                 self.x -= 1
 
@@ -117,19 +125,29 @@ class Game:
                 if self.levelOne[self.x+1][self.y] == self.bbs:
                     if self.levelOne[self.x+2][self.y] == self.sc:
                         self.levelOne[self.x+2][self.y] = self.bs
+                        self.squares.remove([self.x+1, self.y])
                         self.crosses.remove([self.x+2, self.y])
                     elif self.levelOne[self.x+2][self.y] != self.bs:
                         self.levelOne[self.x+2][self.y] = self.bbs
+                        index = self.squares.index([self.x+1, self.y])
+                        self.squares[index] = [self.x+2, self.y]
                 self.levelOne[self.x][self.y] = self.gs
                 self.x += 1
         if side == "left":
-            if self.levelOne[self.x][self.y-1] != bs and self.levelOne[self.x][self.y-1] != sc:
+            if self.levelOne[self.x][self.y-1] != self.bs and self.levelOne[self.x][self.y-1] != sc:
+                print("nei zed nebo kříž")
                 if self.levelOne[self.x][self.y-1] == self.bbs:
+                    print("je oranžovej")
                     if self.levelOne[self.x][self.y-2] == self.sc:
+                        print("je zelenej")
                         self.levelOne[self.x][self.y-2] = self.bs
+                        self.squares.remove([self.x, self.y-1])
                         self.crosses.remove([self.x, self.y-2])
                     elif self.levelOne[self.x][self.y-2] != self.bs:
+                        print("neni zelenej")
                         self.levelOne[self.x][self.y-2] = self.bbs
+                        index = self.squares.index([self.x, self.y-1])
+                        self.squares[index] = [self.x, self.y-2]
                 self.levelOne[self.x][self.y] = self.gs
                 self.y -= 1
         if side == "right":
@@ -137,19 +155,27 @@ class Game:
                 if self.levelOne[self.x][self.y+1] == self.bbs:
                     if self.levelOne[self.x][self.y+2] == self.sc:
                         self.levelOne[self.x][self.y+2] = self.bs
+                        self.squares.remove([self.x, self.y+1])
                         self.crosses.remove([self.x, self.y+2])
                     elif self.levelOne[self.x][self.y+2] != self.bs:
                         self.levelOne[self.x][self.y+2] = self.bbs
+                        index = self.squares.index([self.x, self.y+1])
+                        self.squares[index] = [self.x, self.y+2]
                 self.levelOne[self.x][self.y] = self.gs
                 self.y += 1
         
         self.levelOne[self.x][self.y] = self.head
 
+        print(self.squares)
+        print(self.crosses)
+
         if self.crosses == []:
             self.level += 1
             self.grid()
-            self.x = 0
-            self.y = 0
+            self.levelOne[self.x][self.y] = self.gs
+            self.x = 1
+            self.y = 1
+            self.levelOne[self.x][self.y] = self.head
 
 vtipy = ["Víte jak začíná příběh ekologů? Bio nebio...",
          "Víte, proč krab nemá peníze? Protože je na dně.",
