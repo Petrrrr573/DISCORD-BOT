@@ -162,10 +162,9 @@ class Game:
         if self.crosses == []:
             self.level += 1
             self.levelOne[self.x][self.y] = self.gs
-            self.grid()
             self.x = 1
             self.y = 1
-            self.levelOne[self.x][self.y] = self.head
+            self.grid()
 
 vtipy = ["Víte jak začíná příběh ekologů? Bio nebio...",
          "Víte, proč krab nemá peníze? Protože je na dně.",
