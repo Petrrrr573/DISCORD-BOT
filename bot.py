@@ -9,7 +9,8 @@ import praw
 import datetime, time
 from main import reddit, giphy_key
 import requests
-number = 0
+
+channel_dict = {}
 
 ws = "\N{WHITE LARGE SQUARE}"
 bs = "\N{BLACK LARGE SQUARE}"
@@ -19,7 +20,7 @@ sc = ":negative_squared_cross_mark:"
 
 reactions = ["⬆️", "⬇️", "⬅️", "➡️" , "🔄", "❌"]
 
-game = None
+games_dict = {}
 
 class Game:
     def __init__(self):
@@ -301,11 +302,11 @@ def run_discord_bot(token):
 
         await client.change_presence(status=discord.Status.online,activity=discord.Game('/pomoc'))
 
-        # for server in client.guilds:
-        #     channel = discord.utils.get(server.channels, name="123")
-        #     if channel is not None:
-        #         # Send a message to the channel
-        #         await channel.send("Bot byl znovu zapnut, počítání se restartvovalo. Napište `1` abyste začali")
+        for server in client.guilds:
+            channel = discord.utils.get(server.channels, name="123")
+            if channel:
+                channel_dict[channel.id] = 0
+                await channel.send("Bot byl znovu zapnut, počítání se restartvovalo. Napište `1` abyste začali")
 
     @client.tree.command(name="ahoj", description="Pozdrav mě")
     async def ahoj(interaction: discord.Interaction):
@@ -413,9 +414,10 @@ def run_discord_bot(token):
     
     @client.tree.command(name="soko-hra", description="HRA")
     async def soko_hra(interaction: discord.Interaction):
-        global reactions, game
+        global reactions, games_dict
         embed = discord.Embed(title="SOKO-HRA", color=65535)
-        game = Game()
+        games_dict[interaction.application_id] = Game()
+        game = games_dict[interaction.application_id]
         game.make_string()
         embed.add_field(name=f"Level {game.level}", value=game.square_str)
         button1 = Button(style=discord.ButtonStyle.gray, emoji=game.reactions[0])
@@ -477,8 +479,7 @@ def run_discord_bot(token):
 
         if game.level == 8:
             embed = discord.Embed(title="GAME-TEST", color=65535)
-            embed.add_field(name="KONEC HRY", value=f"Vyhrál si")
-            
+            embed.add_field(name="KONEC HRY", value=f"Vyhrál si")    
 
         await interaction.response.send_message(embed=embed, view=view)
 
@@ -495,7 +496,8 @@ def run_discord_bot(token):
 
     @client.event
     async def on_message(message):
-        global number, reactions, game
+        global number, reactions, games_dict
+        print(games_dict)
 
         # Make sure bot doesn't get stuck in an infinite loop
         if message.author == client.user:
@@ -508,15 +510,14 @@ def run_discord_bot(token):
 
         # Debug printing
         print(f"{username} said: '{user_message}' ({channel})")
-
-        if channel == "123":
+        if message.channel.id in channel_dict:
             if str(message.content).isnumeric():
-                if str(message.content) == str(number + 1):
+                if str(message.content) == str(channel_dict[message.channel.id] + 1):
                     await message.add_reaction("✅")
-                    number += 1
+                    channel_dict[message.channel.id] += 1
                 else:
                     await message.add_reaction("❌")
-                    number = 0
+                    channel_dict[message.channel.id] = 0
                     await message.channel.send(f"`{username}` to pokazil, počítání se resetovalo. Napište `1` abyste začali")
             else:
                 await message.add_reaction("🇳")
