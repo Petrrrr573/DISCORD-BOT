@@ -496,8 +496,7 @@ def run_discord_bot(token):
 
     @client.event
     async def on_message(message):
-        global number, reactions, games_dict
-        print(games_dict)
+        global number, reactions
 
         # Make sure bot doesn't get stuck in an infinite loop
         if message.author == client.user:
