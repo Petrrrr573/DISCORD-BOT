@@ -214,15 +214,15 @@ def run_discord_bot(token):
         await interaction.response.send_message(embed=embed)
 
     @client.tree.command(name="vtip", description="Řeknu ti vtip")
-    async def vtip(interaction: discord.Interaction, language: str, cat: str):
+    async def vtip(interaction: discord.Interaction, language: str, category: str):
         j = await Jokes()
-        joke = await j.get_joke(category=cat, lang=language)
+        joke = await j.get_joke(lang=language, category=[category])
         message = ""
         if joke["type"] == "single":
             message = joke["joke"]
         else:
             message = f'{joke["setup"]} ||{joke["delivery"]}||'
-        interaction.response.send_message(message)
+        await interaction.response.send_message(message)
     
     @vtip.autocomplete("language")
     async def vtip_autocompletion(
@@ -230,21 +230,21 @@ def run_discord_bot(token):
         current: str
         ) -> list[app_commands.Choice[str]]:
         data = []
-        for lang in ["en", "cs"]:
+        for lang in ["en"]:
             if current.lower() in lang.lower():
                 data.append(app_commands.Choice(name=lang, value=lang))
         return data
     
-    # @vtip.autocomplete("cat")
-    # async def vtip_autocompletion2(
-    #     interaction: discord.Interaction,
-    #     current: str
-    #     ) -> list[app_commands.Choice[str]]:
-    #     data2 = []
-    #     for cat in ["Any", "Misc", "Programming", "Dark", "Pun", "Spooky", "Christmas"]:
-    #         if current.lower() in cat.lower():
-    #             data2.append(app_commands.Choice(name=cat, value=cat))
-    #     return data2
+    @vtip.autocomplete("category")
+    async def vtip_autocompletion2(
+        interaction: discord.Interaction,
+        current: str
+        ) -> list[app_commands.Choice[str]]:
+        data2 = []
+        for cat in ["Any", "Misc", "Programming", "Dark", "Pun", "Spooky", "Christmas"]:
+            if current.lower() in cat.lower():
+                data2.append(app_commands.Choice(name=cat, value=cat))
+        return data2
     
 
     @client.tree.command(name="pomoc", description="Pomůžu ti")
