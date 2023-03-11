@@ -222,7 +222,30 @@ def run_discord_bot(token):
             message = joke["joke"]
         else:
             message = f'{joke["setup"]} ||{joke["delivery"]}||'
-        await interaction.response.send_message(message)
+        embed = discord.Embed(title=f"Vtip", color=65535, description=message)
+        embed.timestamp = datetime.datetime.now()
+
+        button1 = Button(style=discord.ButtonStyle.gray, label="Znovu")
+
+        async def button1_callback(interaction):
+            j = await Jokes()
+            joke = await j.get_joke(lang=language, category=[category])
+            message = ""
+            if joke["type"] == "single":
+                message = joke["joke"]
+            else:
+                message = f'{joke["setup"]} ||{joke["delivery"]}||'
+            embed = discord.Embed(title=f"Vtip", color=65535, description=message)
+            embed.timestamp = datetime.datetime.now()
+            await interaction.response.edit_message(embed=embed, view=view)
+
+        button1.callback = button1_callback
+
+        view = View()
+        view.add_item(button1)
+
+        await interaction.response.send_message(embed=embed, view=view)
+
     
     @vtip.autocomplete("language")
     async def vtip_autocompletion(
@@ -287,23 +310,36 @@ def run_discord_bot(token):
         await interaction.response.send_message(embed=embed)
         await interaction.followup.send(embed=embed_link)
     
-    @client.tree.command(name="gif", description="Gif podle tvého zadání (v Angličtině")
+    @client.tree.command(name="gif", description="Gif podle tvého zadání (v Angličtině)")
     @app_commands.describe(název="Název? (v Angličtině)")
     async def gif(interaction: discord.Interaction, název: str):
 
         # Make a request to the Giphy API to search for GIFs
         api_key = giphy_key
-        r = requests.get(f'http://api.giphy.com/v1/gifs/search?api_key={api_key}&q={název}')
-
-        # Get the first GIF from the search results
+        r = requests.get(f'http://api.giphy.com/v1/gifs/search?api_key={giphy_key}&q={název}')
         gif_url = r.json()['data'][random.randint(1, 25)]['images']['original']['url']
 
         embed = discord.Embed(title=název, color=65535)
         embed.set_image(url=gif_url)
         embed.timestamp = datetime.datetime.now()
 
-        # Send the GIF in the channel
-        await interaction.response.send_message(embed=embed)
+        button1 = Button(style=discord.ButtonStyle.gray, label="Znovu")
+
+        async def button1_callback(interaction):
+            r = requests.get(f'http://api.giphy.com/v1/gifs/search?api_key={giphy_key}&q={název}')
+            gif_url = r.json()['data'][random.randint(1, 25)]['images']['original']['url']
+
+            embed = discord.Embed(title=název, color=65535)
+            embed.set_image(url=gif_url)
+            embed.timestamp = datetime.datetime.now()
+            await interaction.response.edit_message(embed=embed, view=view)
+
+        button1.callback = button1_callback
+
+        view = View()
+        view.add_item(button1)
+
+        await interaction.response.send_message(embed=embed, view=view)
 
     @client.tree.command(name="uptime", description="Jak dlouho jsem už online")
     async def uptime(interaction: discord.Interaction):
@@ -313,7 +349,24 @@ def run_discord_bot(token):
         embed = discord.Embed(color=65535)
         embed.add_field(name="Doba", value=text)
         embed.timestamp = datetime.datetime.now()
-        await interaction.response.send_message(embed=embed)
+
+        button1 = Button(style=discord.ButtonStyle.gray, label="Znovu")
+
+        async def button1_callback(interaction):
+            current_time = time.time()
+            difference = int(round(current_time - start_time))
+            text = str(datetime.timedelta(seconds=difference))
+            embed = discord.Embed(color=65535)
+            embed.add_field(name="Doba", value=text)
+            embed.timestamp = datetime.datetime.now()
+            await interaction.response.edit_message(embed=embed, view=view)
+
+        button1.callback = button1_callback
+
+        view = View()
+        view.add_item(button1)
+
+        await interaction.response.send_message(embed=embed, view=view)
     
     @client.tree.command(name="soko-hra", description="HRA")
     async def soko_hra(interaction: discord.Interaction, emoji: str = "😳"):
