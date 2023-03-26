@@ -208,10 +208,24 @@ def run_discord_bot(token):
 
     @client.tree.command(name="ping", description="Ping Pong")
     async def ping(interaction: discord.Interaction):
-        embed = discord.Embed(title=f"Pong", color=65535)
+        embed = discord.Embed(title=f"Pong", color=16777215)
         embed.add_field(name="Čas:", value=f" {round(client.latency*1000)}ms")
         embed.timestamp = datetime.datetime.now()
-        await interaction.response.send_message(embed=embed)
+
+        button1 = Button(style=discord.ButtonStyle.gray, label="Znovu")
+
+        async def button1_callback(interaction):
+            embed = discord.Embed(title=f"Pong", color=16777215)
+            embed.add_field(name="Čas:", value=f" {round(client.latency*1000)}ms")
+            embed.timestamp = datetime.datetime.now()
+            await interaction.response.edit_message(embed=embed, view=view)
+
+        button1.callback = button1_callback
+
+        view = View()
+        view.add_item(button1)
+
+        await interaction.response.send_message(embed=embed, view=view)
 
     @client.tree.command(name="vtip", description="Řeknu ti vtip")
     async def vtip(interaction: discord.Interaction, language: str, category: str):
@@ -222,7 +236,7 @@ def run_discord_bot(token):
             message = joke["joke"]
         else:
             message = f'{joke["setup"]} ||{joke["delivery"]}||'
-        embed = discord.Embed(title=f"Vtip", color=65535, description=message)
+        embed = discord.Embed(title=f"Vtip", color=16777215, description=message)
         embed.timestamp = datetime.datetime.now()
 
         button1 = Button(style=discord.ButtonStyle.gray, label="Znovu")
@@ -235,7 +249,7 @@ def run_discord_bot(token):
                 message = joke["joke"]
             else:
                 message = f'{joke["setup"]} ||{joke["delivery"]}||'
-            embed = discord.Embed(title=f"Vtip", color=65535, description=message)
+            embed = discord.Embed(title=f"Vtip", color=16777215, description=message)
             embed.timestamp = datetime.datetime.now()
             await interaction.response.edit_message(embed=embed, view=view)
 
@@ -272,7 +286,7 @@ def run_discord_bot(token):
 
     @client.tree.command(name="pomoc", description="Pomůžu ti")
     async def pomoc(interaction: discord.Interaction):
-        embed = discord.Embed(title=f"Příkazy", color=65535)
+        embed = discord.Embed(title=f"Příkazy", color=16777215)
         embed.add_field(name="/ahoj", value="Pozdravím tě")
         embed.add_field(name="/řekni", value="Řeknu vše co budeš chtít")
         embed.add_field(name="/koskty", value="Řeknu ti náhodné číslo od 1 od 6")
@@ -299,16 +313,43 @@ def run_discord_bot(token):
         title = post.title
         url = post.url
 
-        embed = discord.Embed(title=title, color=65535)
+        embed = discord.Embed(title=title, color=16777215)
         embed.set_image(url=url)
         embed.timestamp = datetime.datetime.now()
 
 
-        embed_link = discord.Embed(title="Odkaz:", color=65535, description=f"<https://www.reddit.com{str(post.permalink)}>")
+        embed_link = discord.Embed(title="Odkaz:", color=16777215, description=f"<https://www.reddit.com{str(post.permalink)}>")
         embed_link.timestamp = datetime.datetime.now()
 
-        await interaction.response.send_message(embed=embed)
-        await interaction.followup.send(embed=embed_link)
+        button1 = Button(style=discord.ButtonStyle.gray, label="Znovu")
+
+        async def button1_callback(interaction):
+            subreddit = reddit.subreddit(název)
+
+            hot_posts = subreddit.hot(limit=50)
+
+            post = random.choice(list(hot_posts))
+
+            title = post.title
+            url = post.url
+
+            embed = discord.Embed(title=title, color=16777215)
+            embed.set_image(url=url)
+            embed.timestamp = datetime.datetime.now()
+
+
+            embed_link = discord.Embed(title="Odkaz:", color=16777215, description=f"<https://www.reddit.com{str(post.permalink)}>")
+            embed_link.timestamp = datetime.datetime.now()
+            await interaction.response.edit_message(embed=embed, view=view)
+            await followup.edit(embed=embed_link)
+
+        button1.callback = button1_callback
+
+        view = View()
+        view.add_item(button1)
+
+        await interaction.response.send_message(embed=embed, view=view)
+        followup = await interaction.followup.send(embed=embed_link, wait=True)
     
     @client.tree.command(name="gif", description="Gif podle tvého zadání (v Angličtině)")
     @app_commands.describe(název="Název? (v Angličtině)")
@@ -319,7 +360,7 @@ def run_discord_bot(token):
         r = requests.get(f'http://api.giphy.com/v1/gifs/search?api_key={giphy_key}&q={název}')
         gif_url = r.json()['data'][random.randint(1, 25)]['images']['original']['url']
 
-        embed = discord.Embed(title=název, color=65535)
+        embed = discord.Embed(title=název, color=16777215)
         embed.set_image(url=gif_url)
         embed.timestamp = datetime.datetime.now()
 
@@ -329,7 +370,7 @@ def run_discord_bot(token):
             r = requests.get(f'http://api.giphy.com/v1/gifs/search?api_key={giphy_key}&q={název}')
             gif_url = r.json()['data'][random.randint(1, 25)]['images']['original']['url']
 
-            embed = discord.Embed(title=název, color=65535)
+            embed = discord.Embed(title=název, color=16777215)
             embed.set_image(url=gif_url)
             embed.timestamp = datetime.datetime.now()
             await interaction.response.edit_message(embed=embed, view=view)
@@ -346,7 +387,7 @@ def run_discord_bot(token):
         current_time = time.time()
         difference = int(round(current_time - start_time))
         text = str(datetime.timedelta(seconds=difference))
-        embed = discord.Embed(color=65535)
+        embed = discord.Embed(color=16777215)
         embed.add_field(name="Doba", value=text)
         embed.timestamp = datetime.datetime.now()
 
@@ -356,7 +397,7 @@ def run_discord_bot(token):
             current_time = time.time()
             difference = int(round(current_time - start_time))
             text = str(datetime.timedelta(seconds=difference))
-            embed = discord.Embed(color=65535)
+            embed = discord.Embed(color=16777215)
             embed.add_field(name="Doba", value=text)
             embed.timestamp = datetime.datetime.now()
             await interaction.response.edit_message(embed=embed, view=view)
@@ -371,7 +412,7 @@ def run_discord_bot(token):
     @client.tree.command(name="soko-hra", description="HRA")
     async def soko_hra(interaction: discord.Interaction, emoji: str = "😳"):
         global reactions, games_dict
-        embed = discord.Embed(title="SOKO-HRA", color=65535)
+        embed = discord.Embed(title="SOKO-HRA", color=16777215)
         games_dict[interaction.application_id] = Game()
         game = games_dict[interaction.application_id]
         game.head = emoji
@@ -388,35 +429,35 @@ def run_discord_bot(token):
         async def button1_callback(interaction):
             game.move("up")
             game.make_string()
-            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed = discord.Embed(title="SOKO-HRA", color=16777215)
             embed.add_field(name=f"Level {game.level}", value=game.square_str)
             await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[0]}", embed=embed)
         async def button2_callback(interaction):
             game.move("down")
             game.make_string()
-            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed = discord.Embed(title="SOKO-HRA", color=16777215)
             embed.add_field(name=f"Level {game.level}", value=game.square_str)
             await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[1]}", embed=embed)
         async def button3_callback(interaction):
             game.move("left")
             game.make_string()
-            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed = discord.Embed(title="SOKO-HRA", color=16777215)
             embed.add_field(name=f"Level {game.level}", value=game.square_str)
             await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[2]}", embed=embed)
         async def button4_callback(interaction):
             game.move("right")
             game.make_string()
-            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed = discord.Embed(title="SOKO-HRA", color=16777215)
             embed.add_field(name=f"Level {game.level}", value=game.square_str)
             await interaction.response.edit_message(content=f"Poslední pohyb: {game.reactions[3]}", embed=embed)
         async def button5_callback(interaction):
-            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed = discord.Embed(title="SOKO-HRA", color=16777215)
             game.reset()
             game.make_string()
             embed.add_field(name=f"Level {game.level}", value=game.square_str)
             await interaction.response.edit_message(embed=embed)
         async def button6_callback(interaction):
-            embed = discord.Embed(title="SOKO-HRA", color=65535)
+            embed = discord.Embed(title="SOKO-HRA", color=16777215)
             embed.add_field(name="KONEC HRY", value=f"Hra byla ukončena na levelu {game.level}")
             await interaction.response.edit_message(embed=embed)
         
@@ -436,14 +477,14 @@ def run_discord_bot(token):
         view.add_item(button6)
 
         if game.level == 8:
-            embed = discord.Embed(title="GAME-TEST", color=65535)
+            embed = discord.Embed(title="GAME-TEST", color=16777215)
             embed.add_field(name="KONEC HRY", value=f"Vyhrál si")    
 
         await interaction.response.send_message(embed=embed, view=view)
 
     @client.tree.command(name="soko-help", description="Informace o hře jménem Soko")
     async def soko_help(interaction: discord.Interaction):
-        embed = discord.Embed(title=f"SOKO-HELP", color=65535)
+        embed = discord.Embed(title=f"SOKO-HELP", color=16777215)
         embed.add_field(name="**Ovládání:**", value="⬆️ NAHORU\n\n ⬇️ DOLU \n\n ⬅️ DOLEVA \n\n ➡️ DOPRAVA \n\n 🔄 RESTART \n\n ❌ KONEC")
 
         embed.add_field(name="**Cíl:**", value="Posouvej oranžové čtverce na zelené křížky")
@@ -465,7 +506,60 @@ def run_discord_bot(token):
                 user = await client.fetch_user(id)
                 await user.send(message, delete_after=1.00)
             commander = await client.fetch_user(interaction.user.id)
-            await commander.send("🗿__**HOTOVO**__🗿", delete_after=3.00)       
+            await commander.send("🗿__**HOTOVO**__🗿", delete_after=3.00)   
+
+    @client.tree.command(name="cat")
+    async def cat(interaction: discord.Interaction):
+        r = requests.get('https://api.thecatapi.com/v1/images/search')
+        image_url = r.json()[0]["url"]
+
+        embed = discord.Embed(color=16777215, title="Cat 🐱")
+        embed.set_image(url=image_url)
+        embed.timestamp = datetime.datetime.now()
+
+        button1 = Button(style=discord.ButtonStyle.gray, label="Znovu")
+
+        async def button1_callback(interaction):
+            r = requests.get('https://api.thecatapi.com/v1/images/search')
+            image_url = r.json()[0]["url"]
+            embed = discord.Embed(color=16777215, title="Cat 🐱")
+            embed.set_image(url=image_url)
+            embed.timestamp = datetime.datetime.now()
+            await interaction.response.edit_message(embed=embed, view=view)
+
+        view = View()
+        view.add_item(button1)
+
+        button1.callback = button1_callback
+
+        await interaction.response.send_message(embed=embed, view=view)
+
+    @client.tree.command(name="dog")
+    async def dog(interaction: discord.Interaction):
+        r = requests.get('https://api.thedogapi.com/v1/images/search')
+        image_url = r.json()[0]["url"]
+
+        embed = discord.Embed(color=16777215, title="Dog 🐶")
+        embed.set_image(url=image_url)
+        embed.timestamp = datetime.datetime.now()
+
+        button1 = Button(style=discord.ButtonStyle.gray, label="Znovu")
+
+        async def button1_callback(interaction):
+            r = requests.get('https://api.thedogapi.com/v1/images/search')
+            image_url = r.json()[0]["url"]
+            embed = discord.Embed(color=16777215, title="Dog 🐶")
+            embed.set_image(url=image_url)
+            embed.timestamp = datetime.datetime.now()
+            await interaction.response.edit_message(embed=embed, view=view)
+
+        view = View()
+        view.add_item(button1)
+
+        button1.callback = button1_callback
+
+        await interaction.response.send_message(embed=embed, view=view)
+
 
     @client.event
     async def on_message(message):
